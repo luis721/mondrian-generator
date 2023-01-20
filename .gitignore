@@ -11,3 +11,9 @@ pom.xml.asc
 /.prepl-port
 .hgignore
 .hg/
+
+# clojure-lsp
+.lsp
+output.calva-repl
+.clj-kondo
+/clojure-lsp*
