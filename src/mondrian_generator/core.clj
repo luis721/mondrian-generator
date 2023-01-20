@@ -29,7 +29,7 @@
 (defn create-vertical-subsections [section division colors]
   (let [{:keys [top bottom left right level]} section
         new-level (inc level)
-        line  (+ left (* division (- right left)))]
+        line  (+ top (* division (- bottom top)))]
     [(create-section top left line bottom (random-color colors) new-level)
      (create-section top line right bottom (random-color colors) new-level)]))
 
@@ -38,3 +38,4 @@
   (if (is-horizontal-division)
     (create-horizontal-subsections section division colors)
     (create-vertical-subsections section division colors)))
+
