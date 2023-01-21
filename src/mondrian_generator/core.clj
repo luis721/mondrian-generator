@@ -58,7 +58,9 @@
          max-level)
         (recur
          (apply conj
-                pending-sections
+                ; delete current section before adding the child sections
+                (pop pending-sections)
+                ; new subsections
                 (split-section current-section division color-generator))
          sections
          color-generator
