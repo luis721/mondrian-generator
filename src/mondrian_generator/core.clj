@@ -18,32 +18,31 @@
    :level level})
 
 
-(defn create-horizontal-subsections [section division colors]
+(defn create-horizontal-subsections [section division color-generator]
   (let [{:keys [top bottom left right level]} section
         new-level (inc level)
         line  (+ left (* division (- right left)))]
     [(create-section
-      top left line bottom (random-color colors) new-level)
+      top left line bottom (color-generator) new-level)
      (create-section
-      top line right bottom (random-color colors) new-level)]))
+      top line right bottom (color-generator) new-level)]))
 
-(defn create-vertical-subsections [section division colors]
+(defn create-vertical-subsections [section division color-generator]
   (let [{:keys [top bottom left right level]} section
         new-level (inc level)
         line  (+ top (* division (- bottom top)))]
-    [(create-section top left right line (random-color colors) new-level)
-     (create-section line left right bottom (random-color colors) new-level)]))
+    [(create-section top left right line (color-generator) new-level)
+     (create-section line left right bottom (color-generator) new-level)]))
 
 
-(defn split-section [section division colors]
+(defn split-section [section division color-generator]
   (if (true? (is-horizontal-division))
-    (create-horizontal-subsections section division colors)
-    (create-vertical-subsections section division colors)))
+    (create-horizontal-subsections section division color-generator)
+    (create-vertical-subsections section division color-generator)))
 
 ;; TODO: turn division, max-level and colors into a map
-;; collors will be a function instead of the list of options
 (defn generate-mondrian-r
-  [pending-sections sections colors divisions max-level]
+  [pending-sections sections color-generator divisions max-level]
   (if (> (count pending-sections) 0)
     (let [current-section (last pending-sections)
           division (random-division divisions)]
@@ -51,34 +50,35 @@
            (= division 1)
            (= division 0)
            (>= (current-section :level) max-level))
-        (generate-mondrian-r
+        (recur
          (pop pending-sections)
          (conj sections current-section)
-         colors
+         color-generator
          divisions
          max-level)
-        (generate-mondrian-r
+        (recur
          (apply conj
                 pending-sections
-                (split-section current-section division colors))
+                (split-section current-section division color-generator))
          sections
-         colors
+         color-generator
          divisions
          max-level)))
     sections))
 
 
-(defn generate-mondrian [config divisions colors max-level]
+(defn generate-mondrian [config divisions color-generator max-level]
   (let [pending-sections
-        (create-section 0 0 (config :max-x) (config :max-y) (random-color colors) 0)]
-    (generate-mondrian-r [pending-sections] [] colors divisions max-level))) ;; todo queue etc
+        (create-section 0 0 (config :max-x) (config :max-y) (color-generator) 0)]
+    (generate-mondrian-r [pending-sections] [] color-generator divisions max-level))) ;; todo queue etc
 
 
 (defn main []
   (generate-mondrian
    {:max-x 1000 :max-y 1000}
-   [0 0.25 0.5 0.75 1]
-   ["red" "blue" "yellow" "white" "black"]
+   [0 0.25 0.5 0.5 0.5 0.75 1]
+   (fn [] (random-color ["red" "blue" "yellow" "white" "black"]))
    5))
+
 
 (main)
