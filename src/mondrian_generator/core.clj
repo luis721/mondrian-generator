@@ -41,6 +41,8 @@
     (create-vertical-subsections section division color-generator)))
 
 ;; TODO: turn division, max-level and colors into a map
+;; TODO: division generator in function of the current section (maybe level and height?)
+;; TODO: avoid too many same-horizontal (or vertical) nested subsections
 (defn generate-mondrian-r
   [pending-sections sections color-generator divisions max-level]
   (if (> (count pending-sections) 0)
@@ -72,7 +74,7 @@
 (defn generate-mondrian [config divisions color-generator max-level]
   (let [pending-sections
         (create-section 0 0 (config :max-x) (config :max-y) (color-generator) 0)]
-    (generate-mondrian-r [pending-sections] [] color-generator divisions max-level))) ;; todo queue etc
+    (generate-mondrian-r [pending-sections] [] color-generator divisions max-level)))
 
 
 (defn main []
