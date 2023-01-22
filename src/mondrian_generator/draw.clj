@@ -5,7 +5,7 @@
 
 (def rgb {:red [255 0 0]
           :blue [66 135 245]
-          :yellow [209 179 27]
+          :yellow [252 186 3]
           :black [0]
           :white [255]})
 
@@ -24,7 +24,7 @@
   (run! draw-section
         (core/generate-mondrian
          {:max-x 1500 :max-y 1000}
-         [0 0.3 0.5 0.5 0.5 0.4 1]
+         (fn [section] (core/division-generator section 2))
          ;; TODO: color generator will work in function of the contiguos section
          ;; prefer some color combinations over others
          (fn [] (core/random-color

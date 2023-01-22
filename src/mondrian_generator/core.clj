@@ -3,19 +3,18 @@
 
 (defn random-color [options]  (rand-nth options))
 
-(defn random-division [options] (rand-nth options))
+(defn is-horizontal-division
+  [section]
+  (not (:is-horizontal section)))
 
-(defn is-horizontal-division [] (rand-nth [true false]))
-
-(defn random-max-level [options] (rand-nth options))
-
-(defn create-section [top, left, right, bottom, color, level]
+(defn create-section [top, left, right, bottom, color, level is-horizontal]
   {:top top
    :left left
    :right right
    :bottom bottom
    :color color
-   :level level})
+   :level level
+   :is-horizontal is-horizontal})
 
 
 (defn create-horizontal-subsections [section division color-generator]
@@ -23,40 +22,38 @@
         new-level (inc level)
         line  (+ left (* division (- right left)))]
     [(create-section
-      top left line bottom (color-generator) new-level)
+      top left line bottom (color-generator) new-level true)
      (create-section
-      top line right bottom (color-generator) new-level)]))
+      top line right bottom (color-generator) new-level true)]))
 
 (defn create-vertical-subsections [section division color-generator]
   (let [{:keys [top bottom left right level]} section
         new-level (inc level)
         line  (+ top (* division (- bottom top)))]
-    [(create-section top left right line (color-generator) new-level)
-     (create-section line left right bottom (color-generator) new-level)]))
+    [(create-section top left right line (color-generator) new-level false)
+     (create-section line left right bottom (color-generator) new-level false)]))
 
 
 (defn split-section [section division color-generator]
-  (if (true? (is-horizontal-division))
+  (if (true? (is-horizontal-division section))
     (create-horizontal-subsections section division color-generator)
     (create-vertical-subsections section division color-generator)))
 
 ;; TODO: turn division, max-level and colors into a map
-;; TODO: division generator in function of the current section (maybe level and height?)
-;; TODO: avoid too many same-horizontal (or vertical) nested subsections
 (defn generate-mondrian-r
-  [pending-sections sections color-generator divisions max-level]
+  [pending-sections sections color-generator division-generator max-level]
   (if (> (count pending-sections) 0)
     (let [current-section (last pending-sections)
-          division (random-division divisions)]
+          division (division-generator current-section)]
       (if (or
            (= division 1)
            (= division 0)
-           (>= (current-section :level) max-level))
+           (>= (:level current-section) max-level))
         (recur
          (pop pending-sections)
          (conj sections current-section)
          color-generator
-         divisions
+         division-generator
          max-level)
         (recur
          (apply conj
@@ -66,23 +63,26 @@
                 (split-section current-section division color-generator))
          sections
          color-generator
-         divisions
+         division-generator
          max-level)))
     sections))
 
 
-(defn generate-mondrian [config divisions color-generator max-level]
+(defn generate-mondrian [config division-generator color-generator max-level]
   (let [pending-sections
-        (create-section 0 0 (config :max-x) (config :max-y) (color-generator) 0)]
-    (generate-mondrian-r [pending-sections] [] color-generator divisions max-level)))
+        (create-section 0 0 (:max-x config) (:max-y config) (color-generator) 0 false)]
+    (generate-mondrian-r [pending-sections] [] color-generator division-generator max-level)))
 
+
+(defn division-generator [section min-level]
+  (let [{level :level} section]
+    (if (< level min-level)
+      (rand-nth [0.3 0.4 0.5 0.6 0.7])
+      (rand-nth [0 0.3 0.4 0.5 0.6 0.7 1]))))
 
 (defn main []
   (generate-mondrian
    {:max-x 1000 :max-y 1000}
-   [0 0.25 0.5 0.5 0.5 0.75 1]
+   (fn [section] (division-generator section 3))
    (fn [] (random-color ["red" "blue" "yellow" "white" "black"]))
    5))
-
-
-(main)
