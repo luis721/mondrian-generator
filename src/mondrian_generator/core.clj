@@ -21,17 +21,19 @@
   (let [{:keys [top bottom left right level]} section
         new-level (inc level)
         line  (+ left (* division (- right left)))]
-    [(create-section
-      top left line bottom (color-generator) new-level true)
-     (create-section
-      top line right bottom (color-generator) new-level true)]))
+    {:subsections [(create-section
+                    top left line bottom (color-generator) new-level true)
+                   (create-section
+                    top line right bottom (color-generator) new-level true)]
+     :division [line top line bottom]}))
 
 (defn create-vertical-subsections [section division color-generator]
   (let [{:keys [top bottom left right level]} section
         new-level (inc level)
         line  (+ top (* division (- bottom top)))]
-    [(create-section top left right line (color-generator) new-level false)
-     (create-section line left right bottom (color-generator) new-level false)]))
+    {:subsections [(create-section top left right line (color-generator) new-level false)
+                   (create-section line left right bottom (color-generator) new-level false)]
+     :division [left line right line]}))
 
 
 (defn split-section [section division color-generator]
@@ -40,8 +42,8 @@
     (create-vertical-subsections section division color-generator)))
 
 ;; TODO: turn division, max-level and colors into a map
-(defn generate-mondrian-r
-  [pending-sections sections color-generator division-generator max-level]
+(defn- generate-mondrian-r
+  [pending-sections sections divisions color-generator division-generator max-level]
   (if (> (count pending-sections) 0)
     (let [current-section (last pending-sections)
           division (division-generator current-section)]
@@ -52,26 +54,29 @@
         (recur
          (pop pending-sections)
          (conj sections current-section)
+         divisions
          color-generator
          division-generator
          max-level)
-        (recur
-         (apply conj
-                ; delete current section before adding the child sections
-                (pop pending-sections)
+        (let [{:keys [subsections division]} (split-section current-section division color-generator)]
+          (recur
+           (apply conj
+                ; delete current section before adding the subsections
+                  (pop pending-sections)
                 ; new subsections
-                (split-section current-section division color-generator))
-         sections
-         color-generator
-         division-generator
-         max-level)))
-    sections))
+                  subsections)
+           sections
+           (conj divisions division)
+           color-generator
+           division-generator
+           max-level))))
+    {:sections sections :divisions divisions}))
 
 
 (defn generate-mondrian [config division-generator color-generator max-level]
   (let [pending-sections
         (create-section 0 0 (:max-x config) (:max-y config) (color-generator) 0 false)]
-    (generate-mondrian-r [pending-sections] [] color-generator division-generator max-level)))
+    (generate-mondrian-r [pending-sections] [] [] color-generator division-generator max-level)))
 
 
 (defn division-generator [section min-level]
@@ -80,7 +85,7 @@
       (rand-nth [0.3 0.4 0.5 0.6 0.7])
       (rand-nth [0 0.3 0.4 0.5 0.6 0.7 1]))))
 
-(defn main []
+(defn- main []
   (generate-mondrian
    {:max-x 1000 :max-y 1000}
    (fn [section] (division-generator section 3))

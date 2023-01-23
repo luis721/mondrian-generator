@@ -1,6 +1,6 @@
 (ns mondrian-generator.draw
-  (:require [quil.core :as q]
-            [mondrian-generator.core :as core]))
+  (:require [mondrian-generator.core :as core]
+            [quil.core :as q]))
 
 
 (def rgb {:red [255 0 0]
@@ -21,16 +21,18 @@
   (q/no-loop)
   (q/stroke-weight 5)
   (q/background 255)
-  (run! draw-section
-        (core/generate-mondrian
-         {:max-x 1500 :max-y 1000}
-         (fn [section] (core/division-generator section 2))
-         ;; TODO: color generator will work in function of the contiguos section
-         ;; prefer some color combinations over others
-         (fn [] (core/random-color
+  (doseq [section
+          (:sections
+           (core/generate-mondrian
+            {:max-x 1500 :max-y 1000}
+            (fn [section] (core/division-generator section 2))
+            ;; TODO: color generator will work in function of the contiguos section
+            ;; prefer some color combinations over others
+            (fn [] (core/random-color
                  ;; TODO: random colors given weight
-                 [:red :blue :yellow :white :white :white :blue :yellow :white :white]))
-         4))
+                    [:red :blue :yellow :white :white :white :blue :yellow :white :white]))
+            4))]
+    (draw-section section))
   (q/save "generated/image.png")
   ;; comment to show window with output
   (q/exit))
