@@ -4,6 +4,8 @@ Generate mondrian-like images.
 
 ## Examples
 
+![Example 0](./examples/ex0.png)
+
 ![Example 1](./examples/ex1.png)
 
 ![Example 2](./examples/ex2.png)
