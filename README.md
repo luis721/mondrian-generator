@@ -2,6 +2,10 @@
 
 Generate mondrian-like images.
 
+## Animated Examples
+
+![Example 1](./examples/ex1.gif)
+
 ## Examples
 
 ![Example 0](./examples/ex0.png)
